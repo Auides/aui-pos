@@ -138,21 +138,28 @@ export const db = {
       const user = userSnap.data() as User;
       let newCashAtHand = user.cashAtHand;
       let newCashInBank = user.cashInBank;
-      const amount = Number(transaction.amount);
+      const amount = Math.round(Number(transaction.amount));
+      const charge = Math.round(Number(transaction.charge));
 
       switch (transaction.type) {
         case TransactionType.TRANSFER:
+          // Adds to Cash at Hand, Deducts from Cash in Bank (including charge)
+          newCashAtHand += amount;
+          newCashInBank -= (amount + charge);
+          break;
+        
+        case TransactionType.WITHDRAWAL:
+          // Deducted from Cash at Hand, Added to Cash in Bank
+          newCashAtHand -= amount;
+          newCashInBank += amount;
+          break;
+
         case TransactionType.AIRTIME:
         case TransactionType.DATA:
         case TransactionType.UTILITIES:
           // Adds to Cash at Hand, Deducts from Cash in Bank
           newCashAtHand += amount;
           newCashInBank -= amount;
-          break;
-        
-        case TransactionType.WITHDRAWAL:
-          // Deducted from Cash at Hand
-          newCashAtHand -= amount;
           break;
 
         case TransactionType.WITHDRAW_AND_TRANSFER:
